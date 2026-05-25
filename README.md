@@ -56,7 +56,7 @@ If the skills are working, the agent will use the relevant skill content to answ
 bunx skills add expo/skills
 ```
 
-> This will extract the skills individually so you'll need to manually upgrade them.
+This will extract the skills individually so you'll need to manually upgrade them.
 
 ## License
 
