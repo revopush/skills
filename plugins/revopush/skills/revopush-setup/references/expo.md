@@ -22,20 +22,22 @@ SDK 52–54** (silently inserts no Android bundle wiring). Use the matched pair:
 | Expo SDK | Revopush SDK | Revopush Expo plugin |
 |---|---|---|
 | 52 – 54 | `@revopush/react-native-code-push@2.5.1` | `@revopush/expo-code-push-plugin@1.0.1` |
-| 55 | `@revopush/react-native-code-push@2.6.0` | `@revopush/expo-code-push-plugin@1.1.0` |
+| 55+ | `@revopush/react-native-code-push@2.6.0` | `@revopush/expo-code-push-plugin@1.1.0` |
 
 ```bash
 # Expo SDK 52–54:
 npx expo install @revopush/react-native-code-push@2.5.1 @revopush/expo-code-push-plugin@1.0.1
-# Expo SDK 55:
+# Expo SDK 55 and newer:
 npx expo install @revopush/react-native-code-push@2.6.0 @revopush/expo-code-push-plugin@1.1.0
 ```
 
-For Expo SDK **newer than 55**, check the current pairing on
-`docs.revopush.org/intro/expo` (or `npm view @revopush/expo-code-push-plugin versions`).
-Don't rely on `npx expo install` auto-resolve (these packages aren't in Expo's
-compat metadata, so it grabs the `latest` tag, which can pair the wrong plugin
-with your SDK). Use `npx expo config` to see the RN version under your Expo SDK.
+`1.1.0` is the current plugin and handles SDK 55 and newer (verified through Expo
+SDK 56 / RN 0.85). Just install it directly — don't stop to research the pairing,
+and **step 6 verifies the plugin actually wired your native files**, which is the
+safety net for any SDK newer than what's been explicitly tested. Only deviate if a
+plugin **newer than `1.1.0`** has shipped (`npm view @revopush/expo-code-push-plugin version`),
+in which case prefer it. Don't rely on `npx expo install` auto-resolve — these
+packages aren't in Expo's compat metadata, so it grabs whatever is `latest`.
 
 ## 2. Add the config plugin
 
@@ -64,6 +66,11 @@ https://app.revopush.org to sign up, log in, and create an app + deployments (se
 > (lowercase `rl`) and the hosted URL `https://api.revopush.org`. Do not point it
 > at any other server — Revopush is hosted-only.
 
+> **Keys are baked at prebuild time.** The config plugin writes these values into
+> the native projects during `prebuild`. If you started with placeholders, after
+> you replace them with real keys you must **re-run `npx expo prebuild --clean`**
+> for the new keys to reach the native build.
+
 In `app.config.js` the same value is a JS array entry inside the returned
 `plugins: [...]`.
 
@@ -77,8 +84,14 @@ npx expo prebuild --clean
 
 ## 4. iOS deployment target (if needed)
 
-If prebuild or the iOS build reports a deployment-target error, add
-`expo-build-properties` and set the iOS target to 15.5:
+CodePush needs iOS **15.5+**. Whether you need this step depends on your Expo
+SDK's default iOS target: older SDKs (≈ 54 and below) default **below** 15.5 and
+the `pod install` during prebuild will fail with a deployment-target error;
+newer SDKs already default to 16.x and need nothing here.
+
+**If prebuild reports a deployment-target error**, add `expo-build-properties`
+and set the iOS target to **15.5 — or your Expo SDK's default if that's already
+higher** (don't lower a higher default; just ensure it's ≥ 15.5):
 
 ```json
 [

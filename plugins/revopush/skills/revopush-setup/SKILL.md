@@ -86,12 +86,14 @@ variants are present. Branch on it:
 | **Bare React Native 0.76+** | Read `references/versions.md` to pick the SDK version, then `references/ios.md` and `references/android.md` for the native edits matching the variants detected. |
 | **Not a React Native project / unknown** | Stop and ask the user where the React Native app is. |
 
-If detection is ambiguous — an app that depends on `expo` **and** has committed
-`ios/`/`android/` folders — `detect-project.sh` prints a warning. Confirm with the
-user: a **managed** Expo app (no hand-maintained native code) uses the Expo path
-(`prebuild --clean` regenerates native code); a **bare** app that merely uses
-expo modules uses the bare path, and you must **not** run `prebuild --clean` (it
-would overwrite their native code).
+If an app depends on `expo` **and** has `ios/`/`android/` folders, `detect-project.sh`
+disambiguates by whether those folders are **gitignored**:
+- **Gitignored** → they're generated: **managed Expo (CNG)**. Use the Expo path;
+  `prebuild --clean` is safe. Proceed without asking.
+- **Tracked (committed)** → ambiguous. Ask the user: a **managed** app uses the
+  Expo path (`prebuild --clean` regenerates native code); a **bare** app that just
+  uses expo modules and hand-maintains `ios/`/`android/` uses the bare path, and
+  you must **not** run `prebuild --clean` (it would overwrite their native code).
 
 ### 2. Choose the SDK version and install
 
@@ -104,8 +106,8 @@ install:
 - **Bare RN:** `npm install --save @revopush/react-native-code-push@2.5.1`
   (0.76–0.82) or `@2.6.0`/latest 2.6.x (0.83+) — see versions.md.
 - **Expo:** install the SDK **and** the config plugin, pinned as a matched pair by
-  Expo SDK (e.g. SDK 52–54 → `@revopush/react-native-code-push@2.5.1` +
-  `@revopush/expo-code-push-plugin@1.0.1`; SDK 55 → `@2.6.0` + `@1.1.0`). Don't rely
+  Expo SDK (SDK 52–54 → `@revopush/react-native-code-push@2.5.1` +
+  `@revopush/expo-code-push-plugin@1.0.1`; SDK 55+ → `@2.6.0` + `@1.1.0`). Don't rely
   on `expo install` auto-resolve — see the table in `references/expo.md`.
 
 Also suggest the user install or update the Revopush CLI to the latest version

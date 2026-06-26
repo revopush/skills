@@ -61,6 +61,26 @@ ge_version() {
 HAS_IOS="no";     [ -d "$ROOT/ios" ] && HAS_IOS="yes"
 HAS_ANDROID="no"; [ -d "$ROOT/android" ] && HAS_ANDROID="yes"
 
+# Are the native dirs gitignored? If so they're generated (managed Expo / CNG),
+# which disambiguates the "expo + committed native dirs" case without asking.
+native_gitignored() {
+  # true if BOTH present native dirs are ignored (or there are none tracked by git)
+  local ignored="unknown"
+  if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    local any="no" allign="yes"
+    for d in ios android; do
+      [ -d "$ROOT/$d" ] || continue
+      any="yes"
+      git -C "$ROOT" check-ignore -q "$d" 2>/dev/null || allign="no"
+    done
+    [ "$any" = "yes" ] && ignored="$allign"
+  elif [ -f "$ROOT/.gitignore" ] && grep -qE '^[[:space:]]*/?(ios|android)/?[[:space:]]*$' "$ROOT/.gitignore"; then
+    ignored="yes"
+  fi
+  echo "$ignored"
+}
+NATIVE_IGNORED="$(native_gitignored)"
+
 # Native source variants — so the agent knows which reference section to apply.
 IOS_APPDELEGATE="none"
 if ls "$ROOT"/ios/*/AppDelegate.swift >/dev/null 2>&1; then IOS_APPDELEGATE="swift"
@@ -73,7 +93,7 @@ elif [ -f "$ROOT/android/app/build.gradle" ]; then ANDROID_GRADLE="groovy (build
 fi
 
 ANDROID_APP="none"
-MAINAPP_FILE="$(find "$ROOT/android" -name MainApplication.kt -o -name MainApplication.java 2>/dev/null | grep -v '/build/' | head -1)"
+MAINAPP_FILE="$(find "$ROOT/android" \( -name MainApplication.kt -o -name MainApplication.java \) -not -path '*/build/*' -print -quit 2>/dev/null)"
 if [ -n "$MAINAPP_FILE" ]; then
   case "$MAINAPP_FILE" in *.kt) ANDROID_APP="kotlin";; *.java) ANDROID_APP="java";; esac
 fi
@@ -144,9 +164,14 @@ if [ -n "$MS_CODEPUSH_RAW" ]; then
   echo "NOTE: Microsoft react-native-code-push present ($MS_CODEPUSH_RAW) — this is a migration; plan to replace it with @revopush/react-native-code-push."
 fi
 if [ "$PATH_RESULT" = "expo" ] && { [ "$HAS_IOS" = "yes" ] || [ "$HAS_ANDROID" = "yes" ]; }; then
-  echo "WARNING: 'expo' is a dependency AND committed ios/ and/or android/ folders exist."
-  echo "         If this is a MANAGED Expo app (CNG), use the Expo config-plugin path; 'npx expo prebuild --clean' regenerates native code."
-  echo "         But if it's a BARE app that only uses expo modules and you maintain ios/android by hand, use the BARE path instead and do NOT run prebuild --clean (it would overwrite your native code). Confirm which workflow with the user before editing."
+  if [ "$NATIVE_IGNORED" = "yes" ]; then
+    echo "NOTE: ios/android exist but are GITIGNORED → managed Expo (CNG); the native dirs are generated."
+    echo "      Use the Expo config-plugin path; 'npx expo prebuild --clean' is safe (regenerates native code). No need to ask."
+  else
+    echo "WARNING: 'expo' is a dependency AND ios/ and/or android/ folders exist and are NOT gitignored (tracked)."
+    echo "         If this is a MANAGED Expo app (CNG), use the Expo config-plugin path; 'npx expo prebuild --clean' regenerates native code."
+    echo "         But if it's a BARE app that only uses expo modules and you maintain ios/android by hand, use the BARE path instead and do NOT run prebuild --clean (it would overwrite your native code). Confirm which workflow with the user before editing."
+  fi
 fi
 echo "--------------------------------------------------------------------"
 echo "Decision: $REASON"

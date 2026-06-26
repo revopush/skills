@@ -42,6 +42,12 @@
       "prompt": "Integrate revopush OTA into my React Native 0.83 app (New Architecture is on). Both iOS and Android.",
       "expected_output": "Installs @2.6.x, wires iOS normally, and for Android — because the RN 0.83 New-Architecture MainApplication uses reactHost via getDefaultReactHost (no getJSBundleFile to override) — passes jsBundleFilePath = CodePush.getJSBundleFile() into getDefaultReactHost (with the package list constructed first), rather than trying to override a nonexistent getJSBundleFile() method. Podfile 15.5, correct key casing, codePush(App) wrap.",
       "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "Add code push OTA to my managed Expo app (SDK 56). It already has committed ios/ and android/ folders.",
+      "expected_output": "Resolves the managed-vs-bare ambiguity (asks, or treats as managed Expo), takes the config-plugin path with the SDK 55+ pair (@revopush/react-native-code-push@2.6.0 + @revopush/expo-code-push-plugin@1.1.0) without stalling to research the pairing, adds the plugin entry with CodePushServerUrl + placeholder keys, runs expo prebuild --clean, wraps the root layout, then runs verify-integration.sh on the prebuilt native files to confirm wiring, and notes keys must be replaced and prebuild re-run.",
+      "files": []
     }
   ]
 }
