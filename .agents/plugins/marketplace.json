@@ -1,0 +1,20 @@
+{
+  "name": "revopush",
+  "interface": {
+    "displayName": "Revopush Skills"
+  },
+  "plugins": [
+    {
+      "name": "revopush",
+      "source": {
+        "source": "local",
+        "path": "./plugins/revopush"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "revopush",
+  "owner": {
+    "name": "Revopush",
+    "email": "support@revopush.org",
+    "url": "https://revopush.org"
+  },
+  "metadata": {
+    "description": "Official Revopush plugins for Cursor — integrate and manage over-the-air (OTA) updates in React Native and Expo apps.",
+    "version": "1.3.0"
+  },
+  "plugins": [
+    {
+      "name": "revopush",
+      "source": "./plugins/revopush",
+      "description": "Integrate Revopush OTA (over-the-air) updates into React Native and Expo apps. Routes bare RN vs Expo, handles iOS/Android native wiring, the codePush() JS wrapper, and deployment keys."
+    }
+  ]
+}
