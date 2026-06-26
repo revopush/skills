@@ -73,9 +73,26 @@ elif [ -f "$ROOT/android/app/build.gradle" ]; then ANDROID_GRADLE="groovy (build
 fi
 
 ANDROID_APP="none"
-if ls "$ROOT"/android/app/src/main/java/**/MainApplication.kt >/dev/null 2>&1 || \
-   find "$ROOT/android" -name MainApplication.kt 2>/dev/null | grep -q .; then ANDROID_APP="kotlin"
-elif find "$ROOT/android" -name MainApplication.java 2>/dev/null | grep -q .; then ANDROID_APP="java"
+MAINAPP_FILE="$(find "$ROOT/android" -name MainApplication.kt -o -name MainApplication.java 2>/dev/null | grep -v '/build/' | head -1)"
+if [ -n "$MAINAPP_FILE" ]; then
+  case "$MAINAPP_FILE" in *.kt) ANDROID_APP="kotlin";; *.java) ANDROID_APP="java";; esac
+fi
+
+# Android host pattern decides which MainApplication wiring to use (android.md 3a vs 3b).
+# The deciding factor is whether a DefaultReactNativeHost exists — NOT whether New
+# Architecture is on. RN 0.76–0.82 New-Arch templates STILL have a
+# DefaultReactNativeHost and a `reactHost` getter of the 2-arg form
+# getDefaultReactHost(context, reactNativeHost) that DELEGATES to it, so they use
+# the getJSBundleFile() override (3a). Only RN 0.83+ bridgeless templates build the
+# host purely via getDefaultReactHost(packageList = …) with NO DefaultReactNativeHost,
+# and there you pass jsBundleFilePath (3b). So check DefaultReactNativeHost first.
+ANDROID_HOST="unknown"
+if [ -n "$MAINAPP_FILE" ]; then
+  if grep -qs 'DefaultReactNativeHost' "$MAINAPP_FILE"; then
+    ANDROID_HOST="DefaultReactNativeHost present → override getJSBundleFile() (android.md 3a; correct even on New Arch with the 2-arg getDefaultReactHost(context, reactNativeHost))"
+  elif grep -qsE 'getDefaultReactHost' "$MAINAPP_FILE"; then
+    ANDROID_HOST="bridgeless getDefaultReactHost(packageList = …), no DefaultReactNativeHost → pass jsBundleFilePath (android.md 3b)"
+  fi
 fi
 
 # New Architecture hints (best-effort, non-authoritative).
@@ -118,6 +135,7 @@ echo "android/ folder   : $HAS_ANDROID"
 echo "iOS AppDelegate   : $IOS_APPDELEGATE"
 echo "Android build      : $ANDROID_GRADLE"
 echo "Android app class : $ANDROID_APP"
+echo "Android host       : $ANDROID_HOST"
 echo "New Architecture  : $NEW_ARCH"
 if [ -n "$REVOPUSH_RAW" ]; then
   echo "NOTE: @revopush/react-native-code-push already present ($REVOPUSH_RAW) — integration may be partially done."

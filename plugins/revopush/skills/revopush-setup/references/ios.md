@@ -37,9 +37,13 @@ override func bundleURL() -> URL? {
 }
 ```
 
-Older Swift templates expose this via `sourceURL(for:)` / a `bundleURL()` helper
-— whichever method returns the production bundle URL is the one whose `#else`
-branch should return `CodePush.bundleURL()`.
+The method that returns the production bundle URL is the one to edit — its `#else`
+branch should return `CodePush.bundleURL()`. **Where it lives varies by template:**
+on some it's `bundleURL()` directly on `AppDelegate` (e.g. `class AppDelegate:
+RCTAppDelegate`); on the newer `RCTReactNativeFactory` templates it's `bundleURL()`
+on a nested `class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate`, with
+`sourceURL(for:)` just calling `self.bundleURL()`. Edit whichever one returns the
+release bundle URL — don't add a second `bundleURL()` on the wrong class.
 
 ## 2. AppDelegate — Objective-C
 

@@ -38,8 +38,10 @@ npm install --save @revopush/react-native-code-push@2.5.1
 npm install --save @revopush/react-native-code-push@2.6.0   # or the latest 2.6.x
 ```
 
-For Expo, `npx expo install` resolves an SDK-compatible version automatically —
-prefer it, and keep to the 2.x line (see `expo.md`).
+For Expo, **don't** rely on `npx expo install` auto-resolving these versions
+(the packages aren't in Expo's compat metadata). Pin the 2.x SDK **and** the
+SDK-matched config-plugin version explicitly per the table in `expo.md` (e.g. Expo
+52–54 → SDK `2.5.1` + plugin `1.0.1`; Expo 55 → SDK `2.6.0` + plugin `1.1.0`).
 
 To check what's published / latest:
 ```bash

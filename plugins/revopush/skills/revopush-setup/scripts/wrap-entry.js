@@ -68,8 +68,10 @@ if (!alreadyImported) {
 // 2) Wrap the default export.
 let wrapped = false;
 
-// Shape: `export default <Identifier>;`
-const idExport = /export\s+default\s+([A-Za-z_$][\w$]*)\s*;/;
+// Shape: `export default <Identifier>` (with or without a trailing semicolon).
+// Anchored to end-of-line so it won't match `export default App.foo`,
+// `export default function ...`, or `export default React.memo(App)`.
+const idExport = /export\s+default\s+([A-Za-z_$][\w$]*)[ \t]*;?[ \t]*$/m;
 // Shape: `export default function Name(` or `export default class Name`
 const inlineExport = /export\s+default\s+(?:async\s+)?(function|class)\b/;
 

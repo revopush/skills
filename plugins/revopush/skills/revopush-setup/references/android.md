@@ -52,20 +52,70 @@ apply(from = "../../node_modules/@revopush/react-native-code-push/android/codepu
 
 ## 3. MainApplication — Kotlin
 
-Override `getJSBundleFile()` so release builds load the OTA bundle. Edit
-`android/app/src/main/java/.../MainApplication.kt`:
+Goal: in release builds the JS bundle path must come from CodePush. **Which
+approach depends on the host shape in `MainApplication.kt` — and the deciding
+factor is whether a `DefaultReactNativeHost` exists, NOT whether New Architecture
+is on.** Open the file and check:
+
+- **It has a `DefaultReactNativeHost`** (a `reactNativeHost` property, often
+  `object : DefaultReactNativeHost(this) { ... }`) → **override `getJSBundleFile()`
+  (3a).** This is the case for classic templates **and** for RN 0.76–0.82 New
+  Architecture: those also expose `reactHost` via the **2-arg** form
+  `getDefaultReactHost(applicationContext, reactNativeHost)`, which delegates to
+  the `DefaultReactNativeHost` and respects the `getJSBundleFile()` override.
+- **It has NO `DefaultReactNativeHost`** — the host is built purely via
+  `getDefaultReactHost(context, packageList = …)` (RN 0.83+ bridgeless) → **pass
+  `jsBundleFilePath` (3b).** Here there's no `getJSBundleFile()` to override.
+
+> Don't decide from `newArchEnabled` or from "the file mentions
+> `getDefaultReactHost`" — RN 0.76–0.82 New-Arch files contain **both** a
+> `DefaultReactNativeHost` and a `getDefaultReactHost(...)` call, and they want 3a.
+> When in doubt, the SDK's own `node_modules/@revopush/react-native-code-push/docs/setup-android.md`
+> matches the installed version exactly.
+
+In both cases add the import:
 
 ```kotlin
 import com.microsoft.codepush.react.CodePush
 ```
 
-Inside the `ReactNativeHost` (the `DefaultReactNativeHost` object returned by
-`reactNativeHost` / `getReactNativeHost()`), add:
+### 3a. `DefaultReactNativeHost` present — override `getJSBundleFile()`
+
+(Classic templates, and RN 0.76–0.82 New Architecture.) Inside the
+`DefaultReactNativeHost` object returned by `reactNativeHost` /
+`getReactNativeHost()`, add:
 
 ```kotlin
 override fun getJSBundleFile(): String =
     CodePush.getJSBundleFile()
 ```
+
+### 3b. No `DefaultReactNativeHost` (RN 0.83+ bridgeless) — pass `jsBundleFilePath`
+
+(Only when the host is built purely via `getDefaultReactHost(context, packageList = …)`
+and there is no `DefaultReactNativeHost`.) There's no method to override; instead
+pass the CodePush bundle path into the host. Edit the `reactHost`:
+
+```kotlin
+override val reactHost: ReactHost by lazy {
+    getDefaultReactHost(
+        context = applicationContext,
+        packageList =
+            PackageList(this).packages.apply {
+                // add(MyReactNativePackage()) for any non-autolinked packages
+            },
+        // CodePush determines the JS bundle location on each app start.
+        jsBundleFilePath = CodePush.getJSBundleFile(),
+    )
+}
+```
+
+> Build/pass `packageList` **before** `jsBundleFilePath` (as above —
+> arguments evaluate left to right). `CodePush.getJSBundleFile()` reads the
+> CodePush native singleton, which is created when the package list is
+> constructed; calling it before the package list exists throws. In release it
+> resolves to the OTA bundle (or `assets://index.android.bundle` when no update
+> is installed); in debug, Metro/dev support is used and this path is ignored.
 
 ## 4. MainApplication — Java
 
@@ -83,6 +133,11 @@ protected String getJSBundleFile() {
     return CodePush.getJSBundleFile();
 }
 ```
+
+(If a Java project is on the New Architecture and uses `getDefaultReactHost(...)`,
+use the `jsBundleFilePath = CodePush.getJSBundleFile()` approach from **3b**
+instead of overriding `getJSBundleFile()` — the same rule applies regardless of
+language.)
 
 > In both languages the import is `com.microsoft.codepush.react.CodePush` —
 > Revopush keeps the original CodePush Java/Kotlin package name for drop-in

@@ -10,7 +10,7 @@
     {
       "id": 2,
       "prompt": "add over-the-air updates to my expo app (SDK 53, using expo-router). dont have keys yet",
-      "expected_output": "Detects Expo SDK 53, uses the config-plugin path (npx expo install of @revopush/react-native-code-push + @revopush/expo-code-push-plugin), adds the plugin entry with CodePushServerUrl, runs expo prebuild --clean, wraps the root layout with codePush(), notes it won't work in Expo Go, and points the user to app.revopush.org for keys instead of inventing them.",
+      "expected_output": "Detects Expo SDK 53, uses the config-plugin path with the SDK-matched pair (@revopush/react-native-code-push@2.5.1 + @revopush/expo-code-push-plugin@1.0.1 for SDK 52-54, NOT plugin 1.1.0), adds the plugin entry with CodePushServerUrl, runs expo prebuild --clean, verifies the prebuilt native files were actually wired, wraps the root layout with codePush(), notes it won't work in Expo Go, and points the user to app.revopush.org for keys instead of inventing them.",
       "files": []
     },
     {
@@ -35,6 +35,12 @@
       "id": 6,
       "prompt": "We're on Microsoft CodePush via App Center (react-native-code-push) in our bare RN 0.81 app, but App Center is shutting down. Migrate us to revopush.",
       "expected_output": "Follows the migration path: swaps the npm package to @revopush/react-native-code-push@2.x, changes the JS import path only (keeps codePush usage and the com.microsoft.codepush.react native package), points CodePushServerURL/Url at https://api.revopush.org, updates the gradle apply path, and explains that App Center keys do not carry over (create fresh keys at app.revopush.org). Does not rename the native package.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "Integrate revopush OTA into my React Native 0.83 app (New Architecture is on). Both iOS and Android.",
+      "expected_output": "Installs @2.6.x, wires iOS normally, and for Android — because the RN 0.83 New-Architecture MainApplication uses reactHost via getDefaultReactHost (no getJSBundleFile to override) — passes jsBundleFilePath = CodePush.getJSBundleFile() into getDefaultReactHost (with the package list constructed first), rather than trying to override a nonexistent getJSBundleFile() method. Podfile 15.5, correct key casing, codePush(App) wrap.",
       "files": []
     }
   ]
