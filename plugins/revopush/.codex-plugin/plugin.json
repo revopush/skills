@@ -1,0 +1,49 @@
+{
+  "name": "revopush",
+  "version": "1.4.0",
+  "description": "Official Revopush skills for integrating and managing over-the-air (OTA) updates in React Native and Expo apps.",
+  "author": {
+    "name": "Revopush",
+    "email": "support@revopush.org",
+    "url": "https://revopush.org"
+  },
+  "homepage": "https://docs.revopush.org",
+  "repository": "https://github.com/revopush/skills/tree/main/plugins/revopush",
+  "license": "MIT",
+  "keywords": [
+    "revopush",
+    "codepush",
+    "code-push",
+    "ota",
+    "over-the-air",
+    "react-native",
+    "expo",
+    "hot-update",
+    "diff-updates",
+    "mobile",
+    "ios",
+    "android",
+    "deployment"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Revopush",
+    "shortDescription": "Integrate Revopush OTA updates into React Native and Expo apps",
+    "longDescription": "Official Revopush-authored skills for adding over-the-air (OTA) updates to React Native and Expo apps with the @revopush/react-native-code-push SDK. Detects bare RN vs Expo and the native variants (Swift/Objective-C, Kotlin DSL/Groovy, Kotlin/Java), wires iOS and Android, applies the codePush() HOC or the advanced manual sync() API, selects the correct 2.x SDK version, and covers deployment keys and the Revopush CLI for releasing.",
+    "developerName": "Revopush",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://revopush.org/",
+    "defaultPrompt": [
+      "Add over-the-air updates to my React Native app with Revopush",
+      "Set up revopush in my Expo router app",
+      "Wire a 'Check for updates' button using the Revopush manual API",
+      "Migrate my app from Microsoft CodePush to Revopush"
+    ],
+    "brandColor": "#0B1221"
+  }
+}

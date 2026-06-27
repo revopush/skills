@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "revopush",
+  "owner": {
+    "name": "Revopush",
+    "email": "support@revopush.org",
+    "url": "https://revopush.org"
+  },
+  "metadata": {
+    "description": "Official Revopush agent skills for building, deploying, and managing OTA updates in React Native and Expo apps.",
+    "version": "1.4.0",
+    "homepage": "https://github.com/revopush/skills"
+  },
+  "plugins": [
+    {
+      "name": "revopush",
+      "source": "./plugins/revopush",
+      "description": "Integrate Revopush OTA (over-the-air) updates into React Native and Expo apps. Routes bare RN vs Expo, handles iOS/Android native wiring, the codePush() JS wrapper, and deployment keys.",
+      "keywords": [
+        "revopush",
+        "codepush",
+        "code-push",
+        "ota",
+        "react-native",
+        "expo",
+        "over-the-air"
+      ],
+      "category": "deployment"
+    }
+  ]
+}

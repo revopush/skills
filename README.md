@@ -34,7 +34,29 @@ Install the plugin:
 
 ## Cursor
 
-**Install from GitHub**
+There are two ways to use these skills in Cursor.
+
+**Option A — Plugin marketplace (recommended)**
+
+This repo ships a Cursor plugin marketplace (`.cursor-plugin/marketplace.json`).
+On a Cursor version that supports plugin marketplaces, add this repository as a
+marketplace and install the `revopush` plugin from Cursor's plugin settings:
+
+1. Open Cursor's plugin/marketplace settings.
+2. Add the marketplace from GitHub: `revopush/skills`.
+3. Install the **`revopush`** plugin.
+
+Installing as a plugin keeps the skills updated through the marketplace, the same
+way the Claude Code and Codex plugins do.
+
+> Prefer a CLI? The portable [skills CLI](https://skills.sh/docs/cli) also works
+> for Cursor and 70+ other agents:
+>
+> ```
+> npx skills@latest add revopush/skills
+> ```
+
+**Option B — Remote Rule (GitHub)**
 
 1. Open Cursor Settings (Cmd+Shift+J / Ctrl+Shift+J)
 2. Navigate to `Rules & Command` → `Project Rules` → Add Rule → Remote Rule (GitHub)
@@ -53,7 +75,7 @@ If the skills are working, the agent will use the relevant skill content to answ
 ## Any agent
 
 ```
-bunx skills add expo/skills
+bunx skills add revopush/skills
 ```
 
 This will extract the skills individually so you'll need to manually upgrade them.

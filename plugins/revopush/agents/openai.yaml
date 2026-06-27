@@ -1,0 +1,4 @@
+interface:
+  display_name: "Revopush"
+  short_description: "Integrate Revopush OTA updates into React Native and Expo apps"
+  default_prompt: "Use Revopush when adding over-the-air (OTA) / CodePush-style live JS updates to a React Native or Expo app — wiring iOS and Android, the codePush() HOC or manual sync() API, selecting the 2.x SDK, and configuring deployment keys and releases."
