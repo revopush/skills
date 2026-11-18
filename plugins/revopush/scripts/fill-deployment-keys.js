@@ -1,123 +1,49 @@
 #!/usr/bin/env node
-/*
- * PostToolUse hook (Claude Code): fill Revopush deployment-key placeholders.
- *
- * The plugin asks the user for their iOS / Android deployment keys through
- * `userConfig` (sensitive, kept in the platform's secure storage). Claude Code
- * exposes those values to hook processes only, as CLAUDE_PLUGIN_OPTION_<KEY>,
- * so the skill writes a placeholder and this hook swaps in the real key. The
- * key never has to be typed into the chat or read off the user's machine.
- *
- * Scope is deliberately narrow: it only touches the file the Edit/Write tool
- * just changed, only when that file is one of the config files a deployment
- * key lives in, and only the two exact placeholder tokens below.
- *
- * It never prints a key, and never fails the tool call (always exits 0).
- */
+// PostToolUse hook (Claude Code). The deployment keys are sensitive plugin
+// options, which only hook processes can read (CLAUDE_PLUGIN_OPTION_<KEY>), so
+// the skill writes a placeholder and this swaps in the saved key. It only
+// touches the config file that was just edited, never prints a key, and never
+// fails the edit.
 "use strict";
 
 const fs = require("fs");
 const path = require("path");
 
-const PLACEHOLDERS = [
-  { token: "YOUR_IOS_DEPLOYMENT_KEY", env: "CLAUDE_PLUGIN_OPTION_IOS_DEPLOYMENT_KEY", label: "iOS" },
-  { token: "YOUR_ANDROID_DEPLOYMENT_KEY", env: "CLAUDE_PLUGIN_OPTION_ANDROID_DEPLOYMENT_KEY", label: "Android" },
+const KEYS = [
+  ["iOS", "YOUR_IOS_DEPLOYMENT_KEY", "CLAUDE_PLUGIN_OPTION_IOS_DEPLOYMENT_KEY"],
+  ["Android", "YOUR_ANDROID_DEPLOYMENT_KEY", "CLAUDE_PLUGIN_OPTION_ANDROID_DEPLOYMENT_KEY"],
 ];
-
-// Files a deployment key is written to: bare RN (Info.plist, strings.xml) and
-// the Expo config plugin (app.json / app.config.*).
-const TARGET_FILE = /^(Info\.plist|strings\.xml|app\.json|app\.config\.(js|ts|mjs|cjs))$/;
-
-// Deployment keys are opaque URL-safe tokens. Anything else is refused so a
-// mistyped value can't break (or inject into) the XML / JSON it lands in.
-const KEY_SHAPE = /^[A-Za-z0-9_-]{8,128}$/;
-
-function readStdin() {
-  try {
-    return fs.readFileSync(0, "utf8");
-  } catch (e) {
-    return "";
-  }
-}
-
-function tell(message) {
-  process.stdout.write(
-    JSON.stringify({
-      hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: message },
-    })
-  );
-}
-
-function main() {
-  let input;
-  try {
-    input = JSON.parse(readStdin() || "{}");
-  } catch (e) {
-    return;
-  }
-
-  const filePath = input && input.tool_input && input.tool_input.file_path;
-  if (typeof filePath !== "string" || !TARGET_FILE.test(path.basename(filePath))) return;
-
-  let src;
-  try {
-    src = fs.readFileSync(filePath, "utf8");
-  } catch (e) {
-    return;
-  }
-
-  let out = src;
-  const filled = [];
-  const missing = [];
-  const invalid = [];
-
-  for (const p of PLACEHOLDERS) {
-    if (!out.includes(p.token)) continue;
-    const value = (process.env[p.env] || "").trim();
-    if (!value) {
-      missing.push(p.label);
-    } else if (!KEY_SHAPE.test(value)) {
-      invalid.push(p.label);
-    } else {
-      out = out.split(p.token).join(value);
-      filled.push(p.label);
-    }
-  }
-
-  if (out !== src) {
-    try {
-      fs.writeFileSync(filePath, out);
-    } catch (e) {
-      return;
-    }
-  }
-
-  const name = path.basename(filePath);
-  const notes = [];
-  if (filled.length) {
-    notes.push(
-      `Revopush plugin: filled the ${filled.join(" and ")} deployment key in ${name} from the user's saved plugin options. ` +
-        "The file changed on disk; re-read it before editing it again, and do not repeat the key in chat."
-    );
-  }
-  if (missing.length) {
-    notes.push(
-      `Revopush plugin: the ${missing.join(" and ")} deployment key placeholder in ${name} was left as-is because that plugin option is not set. ` +
-        "Ask the user to set it in the revopush plugin's options (/plugin), or to replace the placeholder themselves."
-    );
-  }
-  if (invalid.length) {
-    notes.push(
-      `Revopush plugin: the saved ${invalid.join(" and ")} deployment key does not look like a Revopush deployment key, so the placeholder in ${name} was left as-is. ` +
-        "Ask the user to re-enter it in the revopush plugin's options (/plugin)."
-    );
-  }
-  if (notes.length) tell(notes.join(" "));
-}
+const CONFIG_FILE = /^(Info\.plist|strings\.xml|app\.json|app\.config\.(js|ts|mjs|cjs))$/;
+// Refuse anything that isn't a plain token, so a bad value can't break the XML/JSON.
+const VALID_KEY = /^[A-Za-z0-9_-]{8,128}$/;
 
 try {
-  main();
-} catch (e) {
-  // Never break the user's edit because of this hook.
+  const file = JSON.parse(fs.readFileSync(0, "utf8")).tool_input.file_path;
+  const name = path.basename(file);
+  if (!CONFIG_FILE.test(name)) process.exit(0);
+
+  const before = fs.readFileSync(file, "utf8");
+  let after = before;
+  const notes = [];
+
+  for (const [platform, placeholder, envVar] of KEYS) {
+    if (!after.includes(placeholder)) continue;
+    const key = (process.env[envVar] || "").trim();
+    if (VALID_KEY.test(key)) {
+      after = after.replaceAll(placeholder, key);
+      notes.push(`filled the ${platform} deployment key in ${name} from the user's saved plugin options (file changed on disk: re-read before editing, and don't repeat the key in chat)`);
+    } else {
+      const why = key ? "the saved value doesn't look like a deployment key" : "that plugin option isn't set";
+      notes.push(`left ${placeholder} in ${name} because ${why}; ask the user to set it via /plugin or replace it themselves`);
+    }
+  }
+
+  if (after !== before) fs.writeFileSync(file, after);
+  if (notes.length) {
+    console.log(JSON.stringify({
+      hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `Revopush plugin: ${notes.join("; ")}.` },
+    }));
+  }
+} catch {
+  // Not our file, unreadable input, or a write error: stay out of the way.
 }
-process.exit(0);
