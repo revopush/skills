@@ -1,0 +1,30 @@
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Manifests are valid JSON
+        run: |
+          for f in \
+            .claude-plugin/marketplace.json .agents/plugins/marketplace.json .cursor-plugin/marketplace.json \
+            plugins/revopush/.claude-plugin/plugin.json plugins/revopush/.codex-plugin/plugin.json \
+            plugins/revopush/.cursor-plugin/plugin.json skills.sh.json \
+            plugins/revopush/skills/revopush-setup/evals/evals.json; do
+            python3 -m json.tool "$f" > /dev/null && echo "OK $f"
+          done
+
+      - name: Scripts have valid syntax
+        run: |
+          for f in plugins/revopush/skills/revopush-setup/scripts/*.sh; do bash -n "$f" && echo "OK $f"; done
+          for f in plugins/revopush/scripts/*.js plugins/revopush/skills/revopush-setup/scripts/*.js; do node --check "$f" && echo "OK $f"; done
