@@ -21,6 +21,27 @@ export default codePush(App);
 
 For Expo Router, wrap the root layout export: `export default codePush(RootLayout);`
 
+### Wrapping the root export
+
+Edit the file that default-exports the root component. Show the user the change
+before making it, and leave the file alone if it is already wrapped (it has
+`export default codePush(` or a `codePush(...)(...)` call).
+
+1. Add `import codePush from "@revopush/react-native-code-push";` after the
+   last existing import, unless that import is already there.
+2. Wrap the default export, by shape:
+
+| Existing export | Change to |
+|---|---|
+| `export default App;` | `export default codePush(App);` |
+| `export default function App() { … }` (or `class App`) | Drop `export default` from the declaration and add `export default codePush(App);` at the end of the file |
+| `export default function () { … }` (anonymous) | Give it a name first, e.g. `function RevopushRoot() { … }`, then add `export default codePush(RevopushRoot);` at the end |
+
+Anything else — `export default React.memo(App)`, `export default App.foo`, a
+re-export, or a file with no default export — don't guess: show the user the
+export and agree on the edit, since a wrong change to the entry file breaks the
+app.
+
 ### HOC options
 
 Pass an options object to tune *when* updates are checked and installed:
@@ -56,8 +77,9 @@ codePushDownloadDidProgress({ receivedBytes, totalBytes }) { /* update a bar */ 
 ```
 
 A safe production default: check on resume, apply on next resume, and only after
-10 minutes backgrounded so users aren't interrupted mid-session — see
-`assets/codepush-options.template.js`.
+10 minutes backgrounded so users aren't interrupted mid-session — the options
+object shown above. Pass it as `codePush(codePushOptions)(App)`; don't
+default-export the options object itself.
 
 ## Option B — manual / custom update flow
 

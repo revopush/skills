@@ -9,7 +9,7 @@ and apply the matching section**:
   and the `apply` syntax differs).
 - App class: **`MainApplication.kt`** (Kotlin) *or* **`MainApplication.java`**.
 
-`scripts/detect-project.sh` reports which variants are present. Apply edits one
+`detection.md` explains how to tell which variants are present. Apply edits one
 file at a time and show the user each change.
 
 ## Table of contents
@@ -159,6 +159,6 @@ so the native module reads them:
 
 > Casing matters: Android uses `CodePushServerUrl` (lowercase `rl`), unlike the
 > iOS `CodePushServerURL` (uppercase `URL`). This asymmetry is intentional —
-> match each platform exactly. Write the `YOUR_ANDROID_DEPLOYMENT_KEY`
-> placeholder exactly — the user supplies the real key (see "Where the key
-> values come from" in `cli-and-releases.md`).
+> match each platform exactly. Use the Android key the user gives you, or
+> keep the `YOUR_ANDROID_DEPLOYMENT_KEY` placeholder until they have one (see
+> "Where the key values come from" in `cli-and-releases.md`).

@@ -92,9 +92,9 @@ Add the server URL and the **iOS** deployment key to `ios/<YourApp>/Info.plist`:
 
 > Casing matters: iOS uses `CodePushServerURL` (uppercase `URL`). Android uses
 > `CodePushServerUrl` (lowercase `rl`) — see `android.md`. Match each exactly.
-> Write the `YOUR_IOS_DEPLOYMENT_KEY` placeholder exactly — the user supplies the
-> real key (see "Where the key values come from" in `cli-and-releases.md`).
-> Never invent one or read one off the machine.
+> Use the iOS key the user gives you, or keep the `YOUR_IOS_DEPLOYMENT_KEY`
+> placeholder until they have one (see "Where the key values come from" in
+> `cli-and-releases.md`). Never invent one or read one off the machine.
 
 ## 5. Reinstall pods
 

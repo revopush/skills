@@ -25,34 +25,47 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: JSON files and scripts are valid
+      - name: JSON files are valid
         run: |
-          # check <message> <pathspec> <command...>: run the command on every
-          # tracked file matching the pathspec. Every bad file is reported, not
-          # just the first, and matching nothing is a failure: a moved directory,
-          # a wrong pathspec or a failing `git ls-files` must not pass unchecked.
-          check() {
-            local message=$1 pathspec=$2 count=0 f
-            shift 2
-            while IFS= read -r -d '' f; do
-              count=$((count + 1))
-              if "$@" "$f" > /dev/null < /dev/null; then
-                echo "OK $f"
-              else
-                echo "::error file=$f::$message"
-                failed=1
-              fi
-            done < <(git ls-files -z -- "$pathspec")
-            if [ "$count" -eq 0 ]; then
-              echo "::error::no tracked files match '$pathspec'"
+          failed=0
+          count=0
+          while IFS= read -r -d '' f; do
+            count=$((count + 1))
+            if python3 -m json.tool "$f" > /dev/null; then
+              echo "OK $f"
+            else
+              echo "::error file=$f::invalid JSON"
               failed=1
             fi
-          }
+          done < <(git ls-files -z -- '*.json')
+          # Matching nothing means the listing itself broke; don't pass unchecked.
+          if [ "$count" -eq 0 ]; then
+            echo "::error::no tracked JSON files found"
+            failed=1
+          fi
+          exit "$failed"
 
+      # The plugin directory refuses code from organizations that aren't
+      # Verified: only docs, data and images may ship, and nothing executable.
+      - name: Plugin ships only files the directory accepts
+        run: |
           failed=0
-          check 'invalid JSON' '*.json' python3 -m json.tool
-          check 'shell syntax error' 'plugins/**/scripts/*.sh' bash -n
-          # Only scripts/: assets/*.template.js is an ES module for the user's
-          # app, which `node --check` rejects outside a "type": "module" package.
-          check 'JavaScript syntax error' 'plugins/**/scripts/*.js' node --check
+          while IFS= read -r -d '' f; do
+            case "$f" in
+              *.md | *.txt | *.json | *.yaml | *.yml | *.png | *.jpg | *.jpeg | *.gif | *.webp | *.ico) ;;
+              *)
+                echo "::error file=$f::file type not accepted by the plugin directory"
+                failed=1
+                continue
+                ;;
+            esac
+            if [ "$(head -c 2 -- "$f")" = '#!' ]; then
+              echo "::error file=$f::starts with #!"
+              failed=1
+            fi
+          done < <(git ls-files -z -- plugins)
+          if grep -n '"hooks"' plugins/*/.claude-plugin/plugin.json; then
+            echo "::error::plugin.json declares hooks, which the plugin directory refuses"
+            failed=1
+          fi
           exit "$failed"
