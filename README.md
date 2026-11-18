@@ -29,8 +29,15 @@ Add the marketplace:
 Install the plugin:
 
 ```
-/plugin install revopush
+/plugin install revopush --marketplace revopush/skills
 ```
+
+On install, Claude Code offers two optional settings: your **iOS deployment key**
+and **Android deployment key** (from [app.revopush.org](https://app.revopush.org)).
+They are stored in your system's secure storage. When the skill wires Revopush
+into your app it writes placeholders, and the plugin fills in your saved keys, so
+you never have to paste them into the chat. Leave them empty to fill the keys in
+yourself later; change them any time from `/plugin`.
 
 ## Cursor
 

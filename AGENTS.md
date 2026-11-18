@@ -19,6 +19,8 @@ plugins/
     .codex-plugin/plugin.json             # Codex plugin manifest (camelCase `interface`)
     .cursor-plugin/plugin.json            # Cursor plugin manifest (`displayName`)
     agents/openai.yaml                    # Codex UI metadata (snake_case)
+    assets/icon.png                       # Directory listing icon (512x512 PNG, `icon` in the Claude manifest)
+    scripts/fill-deployment-keys.js       # Claude Code PostToolUse hook: fills key placeholders from userConfig
     skills/
       revopush-setup/
         SKILL.md                          # Router/workflow (keep lean, < ~500 lines)
@@ -53,6 +55,20 @@ changes the policy:
   especially must not "tidy" this.)
 - **Server-URL key casing is asymmetric on purpose:** iOS `CodePushServerURL`
   (uppercase `URL`) vs Android/Expo `CodePushServerUrl` (lowercase `Url`).
+- **Deployment keys are supplied by the user, never read from their machine.**
+  The Claude manifest declares `userConfig.ios_deployment_key` /
+  `android_deployment_key` (`sensitive: true`); the skill writes the exact
+  placeholders `YOUR_IOS_DEPLOYMENT_KEY` / `YOUR_ANDROID_DEPLOYMENT_KEY` and the
+  plugin's PostToolUse hook (`scripts/fill-deployment-keys.js`) swaps in the
+  saved value. Sensitive options are not substituted into skill text, which is
+  why a hook does it. Don't add steps that make the agent run
+  `revopush deployment ls -k`, read CLI config/keychain/env, ask for keys in
+  chat, or run authenticated `revopush` commands itself (`release-react`,
+  `promote`, `rollback`, `app`, `deployment`, `login` — they use the login
+  session stored on the user's machine; the skill hands them to the user) — this is an Anthropic plugin-directory policy requirement. Keep the
+  placeholder tokens in sync across the references, the hook, and
+  `verify-integration.sh`. The hook is declared inline in the Claude manifest
+  only (no `hooks/hooks.json`) so Codex and Cursor don't pick it up.
 - **`docs.revopush.org` is the reference, but it can lag the product.** When the
   docs and this repo's guidance conflict (e.g. the 1.x vs 2.x line), the repo's
   current policy is intentional — don't "correct" it back to stale docs.
@@ -124,6 +140,15 @@ them against a sample project before relying on a change:
 plugins/revopush/skills/revopush-setup/scripts/detect-project.sh <sample-app>
 plugins/revopush/skills/revopush-setup/scripts/verify-integration.sh <sample-app>
 node plugins/revopush/skills/revopush-setup/scripts/wrap-entry.js <entry-file> --dry-run
+```
+
+The key-filling hook reads the tool call as JSON on stdin and the keys from
+`CLAUDE_PLUGIN_OPTION_*`; test it against a scratch copy of a config file:
+
+```bash
+echo '{"tool_input":{"file_path":"<scratch>/Info.plist"}}' | \
+  CLAUDE_PLUGIN_OPTION_IOS_DEPLOYMENT_KEY=test_key_12345 \
+  node plugins/revopush/scripts/fill-deployment-keys.js
 ```
 
 When iterating on the skill, the `skill-creator` eval loop drives the

@@ -16,9 +16,9 @@ description: Integrate the Revopush over-the-air (OTA) update SDK
   without React Native.
 license: MIT
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
   author: revopush
-  last-updated: "2026-06-26"
+  last-updated: "2026-11-18"
 ---
 
 # Revopush OTA Setup
@@ -62,12 +62,18 @@ These edits touch real native project files. Work transparently:
    file and what you're adding, and edit one file at a time so changes are easy
    to review and revert. The `scripts/wrap-entry.js` helper is `--dry-run`-first
    and backs up the file it touches — use it for the JS wrap.
-4. **Never invent deployment keys.** Keys are created in the dashboard at
-   https://app.revopush.org (the user signs up and logs in there), or via the
-   CLI. Ask the user for their iOS and Android keys, or walk them through getting
-   them per `references/cli-and-releases.md`. Use `YOUR_DEPLOYMENT_KEY` as a
-   placeholder only if they don't have keys yet, and tell them to fill it in
-   before a release will work.
+4. **Deployment keys come from the user, never from their machine.** Keys are
+   created in the dashboard at https://app.revopush.org (the user signs up and
+   logs in there). Never invent one, and don't go looking for one yourself: no
+   `revopush deployment ls -k`, no reading CLI config/session files, the
+   keychain, environment variables, or other projects. Those belong to the
+   user, and a key found that way may be for the wrong app or deployment.
+   The same goes for the user's Revopush login: apart from installing the CLI
+   and `revopush -v`, `revopush` commands run on the session stored on the
+   user's machine, so hand them to the user to run instead of running them.
+   Write the placeholders `YOUR_IOS_DEPLOYMENT_KEY` and
+   `YOUR_ANDROID_DEPLOYMENT_KEY` and let the user supply the values — see
+   "Where the key values come from" in `references/cli-and-releases.md`.
 
 ## Workflow
 
@@ -153,8 +159,9 @@ download/install UI, progress callbacks), read `references/js-api.md`.
 
 ### 5. Deployment keys & releasing
 
-Add the iOS and Android deployment keys, and show the user how to cut a release,
-following `references/cli-and-releases.md`.
+Wire in the iOS and Android deployment-key entries (placeholders that the
+user's saved plugin options or the user fill in), and give the user the commands
+to cut a release themselves, following `references/cli-and-releases.md`.
 
 ### 6. Verify
 
@@ -172,9 +179,11 @@ but isn't:
 - Build a **release** build (OTA never applies in debug/dev): bare RN
   `npx react-native run-ios --mode Release --no-packager` (or the Android release
   variant); Expo a dev/native build (Revopush does **not** work in Expo Go).
-- Make a trivial visible JS change, then cut a release to the deployment whose key
-  is in the build: `revopush release-react <app> <ios|android> -d Staging`
-  (see `references/cli-and-releases.md`).
+- Make a trivial visible JS change, then have the **user** cut a release to the
+  deployment whose key is in the build, from their own terminal:
+  `revopush release-react <app> <ios|android> -d Staging`
+  (see `references/cli-and-releases.md` — the CLI uses the user's own login, so
+  it is theirs to run).
 - **Relaunch the app twice.** With the default `installMode: ON_NEXT_RESTART`, an
   update downloads on one launch and only *applies* on the next — a single
   relaunch shows nothing and looks like a failure. Tell the user this explicitly.

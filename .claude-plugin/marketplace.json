@@ -8,8 +8,7 @@
   },
   "metadata": {
     "description": "Official Revopush agent skills for building, deploying, and managing OTA updates in React Native and Expo apps.",
-    "version": "1.4.0",
-    "homepage": "https://github.com/revopush/skills"
+    "version": "1.5.0"
   },
   "plugins": [
     {

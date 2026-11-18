@@ -41,10 +41,11 @@ packages aren't in Expo's compat metadata, so it grabs whatever is `latest`.
 
 ## 2. Add the config plugin
 
-Add the plugin to the `plugins` array in `app.json` or `app.config.js`. Fill in
-the user's iOS and Android deployment keys — ask for them, or point them at
-https://app.revopush.org to sign up, log in, and create an app + deployments (see
-`cli-and-releases.md`). Use placeholders only if they have no keys yet.
+Add the plugin to the `plugins` array in `app.json` or `app.config.js`. Write the
+two deployment-key placeholders exactly as shown — the user supplies the real
+keys (see "Where the key values come from" in `cli-and-releases.md`). If they
+have no keys yet, point them at https://app.revopush.org to sign up, log in, and
+create an app + deployments.
 
 ```json
 [

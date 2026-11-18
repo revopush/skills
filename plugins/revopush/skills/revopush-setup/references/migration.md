@@ -71,7 +71,10 @@ point at the new package path:
 App Center keys do **not** work against Revopush. Create a new app and
 deployments at https://app.revopush.org (or via the CLI — see
 `cli-and-releases.md`), then replace the old `CodePushDeploymentKey` values in
-`Info.plist` / `strings.xml` / the Expo plugin with the new per-platform keys.
+`Info.plist` / `strings.xml` / the Expo plugin with the
+`YOUR_IOS_DEPLOYMENT_KEY` / `YOUR_ANDROID_DEPLOYMENT_KEY` placeholders so the
+user's new per-platform keys land there (see "Where the key values come from"
+in `cli-and-releases.md`).
 
 ### 6. Confirm the rest of the wiring
 
