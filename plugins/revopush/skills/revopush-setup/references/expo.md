@@ -41,10 +41,10 @@ packages aren't in Expo's compat metadata, so it grabs whatever is `latest`.
 
 ## 2. Add the config plugin
 
-Add the plugin to the `plugins` array in `app.json` or `app.config.js`. Write the
-two deployment-key placeholders exactly as shown — the user supplies the real
-keys (see "Where the key values come from" in `cli-and-releases.md`). If they
-have no keys yet, point them at https://app.revopush.org to sign up, log in, and
+Add the plugin to the `plugins` array in `app.json` or `app.config.js`. Use the
+iOS and Android deployment keys the user gives you, or keep the two placeholders
+shown until they have them (see "Where the key values come from" in
+`cli-and-releases.md`). If they have no keys yet, point them at https://app.revopush.org to sign up, log in, and
 create an app + deployments.
 
 ```json
@@ -118,8 +118,8 @@ export default codePush(RootLayout);
 ```
 
 See `js-api.md` for HOC options and for the manual `sync()` / `checkForUpdate()`
-flow if the user wants custom update UX. `scripts/wrap-entry.js` can apply the
-wrap idempotently with a backup.
+flow if the user wants custom update UX, and "Wrapping the root export" there
+for how to edit each export shape.
 
 ## 6. Verify the prebuild actually wired the native code
 
@@ -129,11 +129,8 @@ cases include the Android host-shape mismatch (above) and an iOS regex that miss
 the modern Swift *implicit-return* `bundleURL()`. A mis-wire produces **no error**
 and a build that simply never applies OTA updates.
 
-After `npx expo prebuild --clean`, check the generated native files:
-
-```bash
-scripts/verify-integration.sh        # now also inspects the prebuilt ios/ + android/
-```
+After `npx expo prebuild --clean`, check the generated native files with the iOS
+and Android sections of `verification.md`.
 
 Confirm specifically:
 - iOS `ios/<App>/AppDelegate.*` returns `CodePush.bundleURL()` on the release path,

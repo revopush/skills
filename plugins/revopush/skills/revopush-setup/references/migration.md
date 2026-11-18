@@ -1,8 +1,8 @@
 # Migrating from Microsoft / AppCenter CodePush to Revopush
 
 Use this when the project already has Microsoft's `react-native-code-push` (often
-from App Center, which Microsoft has retired). `scripts/detect-project.sh` flags
-this case ("Microsoft react-native-code-push present"). The good news: the JS API
+from App Center, which Microsoft has retired). Detection (`detection.md`) flags
+this case: `react-native-code-push` is in `package.json`. The good news: the JS API
 and native hooks are the same, so migration is mostly **renaming the package and
 repointing the server** — your `codePush()` usage and options don't change.
 
@@ -40,8 +40,8 @@ Every file that imports CodePush changes the **module string** only:
 ```
 
 The `codePush(App)` wrap, options, and any manual `sync()`/`checkForUpdate()`
-code are unchanged. (`scripts/wrap-entry.js` is for first-time wrapping; in a
-migration the wrap usually already exists — just fix the import path.)
+code are unchanged. (In a migration the wrap usually already exists — just fix
+the import path.)
 
 ### 3. Repoint the server URL (the #1 thing migrators miss)
 
@@ -71,14 +71,14 @@ point at the new package path:
 App Center keys do **not** work against Revopush. Create a new app and
 deployments at https://app.revopush.org (or via the CLI — see
 `cli-and-releases.md`), then replace the old `CodePushDeploymentKey` values in
-`Info.plist` / `strings.xml` / the Expo plugin with the
-`YOUR_IOS_DEPLOYMENT_KEY` / `YOUR_ANDROID_DEPLOYMENT_KEY` placeholders so the
-user's new per-platform keys land there (see "Where the key values come from"
-in `cli-and-releases.md`).
+`Info.plist` / `strings.xml` / the Expo plugin with the user's new per-platform
+keys, or with the `YOUR_IOS_DEPLOYMENT_KEY` / `YOUR_ANDROID_DEPLOYMENT_KEY`
+placeholders until they have them (see "Where the key values come from" in
+`cli-and-releases.md`).
 
 ### 6. Confirm the rest of the wiring
 
-Run `scripts/verify-integration.sh` to check nothing was missed (server URL, keys,
+Go through `verification.md` to check nothing was missed (server URL, keys,
 Podfile 15.5, gradle apply, bundle hooks, the wrap). Then verify with a release
 build per the main workflow's Verify step.
 

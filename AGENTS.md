@@ -20,13 +20,10 @@ plugins/
     .cursor-plugin/plugin.json            # Cursor plugin manifest (`displayName`)
     agents/openai.yaml                    # Codex UI metadata (snake_case)
     assets/icon.png                       # Directory listing icon (512x512 PNG, `icon` in the Claude manifest)
-    scripts/fill-deployment-keys.js       # Claude Code PostToolUse hook: fills key placeholders from userConfig
     skills/
       revopush-setup/
         SKILL.md                          # Router/workflow (keep lean, < ~500 lines)
-        references/                       # Loaded on demand by the workflow
-        scripts/                          # Bundled executables (detect / wrap / verify)
-        assets/                           # Templates used in output
+        references/                       # Loaded on demand by the workflow (Markdown only)
         evals/evals.json                  # Test prompts + assertions
 README.md                                 # User-facing install instructions
 skills.sh.json                            # skills.sh catalog grouping
@@ -55,20 +52,24 @@ changes the policy:
   especially must not "tidy" this.)
 - **Server-URL key casing is asymmetric on purpose:** iOS `CodePushServerURL`
   (uppercase `URL`) vs Android/Expo `CodePushServerUrl` (lowercase `Url`).
+- **The plugin ships no code and no hooks.** Anthropic's plugin directory
+  refuses, for organizations that aren't Verified, any hook and any file under
+  `plugins/revopush/` that isn't Markdown, text, JSON, YAML or a PNG/JPEG/GIF/
+  WebP/ICO image, or that starts with `#!`. So no `scripts/`, no `.js`/`.sh`
+  templates, no `hooks` in the manifest. Deterministic logic lives as checklists
+  in `references/` (`detection.md`, `verification.md`, "Wrapping the root
+  export" in `js-api.md`); code samples go in fenced blocks inside Markdown.
+  The `check` workflow enforces this.
 - **Deployment keys are supplied by the user, never read from their machine.**
-  The Claude manifest declares `userConfig.ios_deployment_key` /
-  `android_deployment_key` (`sensitive: true`); the skill writes the exact
-  placeholders `YOUR_IOS_DEPLOYMENT_KEY` / `YOUR_ANDROID_DEPLOYMENT_KEY` and the
-  plugin's PostToolUse hook (`scripts/fill-deployment-keys.js`) swaps in the
-  saved value. Sensitive options are not substituted into skill text, which is
-  why a hook does it. Don't add steps that make the agent run
-  `revopush deployment ls -k`, read CLI config/keychain/env, ask for keys in
-  chat, or run authenticated `revopush` commands itself (`release-react`,
-  `promote`, `rollback`, `app`, `deployment`, `login` — they use the login
-  session stored on the user's machine; the skill hands them to the user) — this is an Anthropic plugin-directory policy requirement. Keep the
-  placeholder tokens in sync across the references, the hook, and
-  `verify-integration.sh`. The hook is declared inline in the Claude manifest
-  only (no `hooks/hooks.json`) so Codex and Cursor don't pick it up.
+  The skill asks the user for the keys and otherwise writes the placeholders
+  `YOUR_IOS_DEPLOYMENT_KEY` / `YOUR_ANDROID_DEPLOYMENT_KEY`. Don't add steps
+  that make the agent run `revopush deployment ls -k`, read CLI
+  config/keychain/env, or run authenticated `revopush` commands itself
+  (`release-react`, `promote`, `rollback`, `app`, `deployment`, `login` — they
+  use the login session stored on the user's machine; the skill hands them to
+  the user). This is a directory policy requirement ("Uses a credential from
+  the user's machine"). There is no `userConfig` for the keys: a sensitive
+  option is only readable by hooks, which the directory doesn't accept from us.
 - **`docs.revopush.org` is the reference, but it can lag the product.** When the
   docs and this repo's guidance conflict (e.g. the 1.x vs 2.x line), the repo's
   current policy is intentional — don't "correct" it back to stale docs.
@@ -86,8 +87,8 @@ block; the Cursor manifest adds `displayName`.
 (≤1024 chars, states *what* and *when*). Optional `license`, `metadata` (we keep
 `version`, `author`, `last-updated`). **No angle brackets anywhere in the
 frontmatter** (portability/injection). Keep `SKILL.md` lean; push detail into
-`references/` and load it only on the relevant branch; put repeated logic in
-`scripts/`.
+`references/` and load it only on the relevant branch; put repeated logic in a
+reference checklist (no scripts — see **Product invariants**).
 
 ## Marketplace wrappers
 
@@ -108,8 +109,9 @@ skill's `metadata.version` in `SKILL.md`.
    must equal the frontmatter `name`).
 2. Add `references/` for version-/variant-specific detail; cross-link them from
    `SKILL.md` and let the agent read only what its branch needs.
-3. Add `scripts/` only for reusable, deterministic logic (detection, idempotent
-   edits, verification) — not one-off command blocks.
+3. Don't add `scripts/` or other code files (see **Product invariants**); write
+   reusable, deterministic logic (detection, verification) as a reference
+   checklist the agent follows with its own tools.
 4. Add test prompts (and assertions) to `evals/evals.json`.
 5. List new skills in `skills.sh.json` and, if a new plugin, add matching entries
    to all three marketplace catalogs.
@@ -133,23 +135,9 @@ done
 
 If available, also run `claude plugin validate .` and `claude plugin validate ./plugins/revopush`.
 
-The bundled scripts are self-testable (read-only or `--dry-run`-first) — exercise
-them against a sample project before relying on a change:
-
-```bash
-plugins/revopush/skills/revopush-setup/scripts/detect-project.sh <sample-app>
-plugins/revopush/skills/revopush-setup/scripts/verify-integration.sh <sample-app>
-node plugins/revopush/skills/revopush-setup/scripts/wrap-entry.js <entry-file> --dry-run
-```
-
-The key-filling hook reads the tool call as JSON on stdin and the keys from
-`CLAUDE_PLUGIN_OPTION_*`; test it against a scratch copy of a config file:
-
-```bash
-echo '{"tool_input":{"file_path":"<scratch>/Info.plist"}}' | \
-  CLAUDE_PLUGIN_OPTION_IOS_DEPLOYMENT_KEY=test_key_12345 \
-  node plugins/revopush/scripts/fill-deployment-keys.js
-```
+The `check` workflow (`.github/workflows/check.yml`) runs on every PR: all
+tracked JSON must parse, and `plugins/` may contain only the file types the
+directory accepts.
 
 When iterating on the skill, the `skill-creator` eval loop drives the
 `*-workspace/iteration-N/` directories (not committed as part of the skill).

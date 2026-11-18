@@ -57,29 +57,17 @@ revopush deployment add MyApp-iOS QA
 
 ## Where the key values come from
 
-Always write the placeholders `YOUR_IOS_DEPLOYMENT_KEY` and
-`YOUR_ANDROID_DEPLOYMENT_KEY` into the config. Then:
+The user gives you the keys. Ask for the iOS and the Android key (they are
+different — one per platform app) and write each into its place below.
 
-- **Claude Code with the Revopush plugin:** the plugin has two options, *iOS
-  deployment key* and *Android deployment key*, which the user fills in when
-  enabling the plugin (or later via `/plugin` → revopush → configure). They are
-  stored in the system's secure storage, not in the chat. When you write a
-  placeholder into `Info.plist`, `strings.xml`, `app.json` or `app.config.*`,
-  the plugin replaces it with the saved key and tells you it did. You never see
-  or handle the key, so don't ask the user to paste it into the conversation,
-  and don't echo it if you later read the file.
-- **If a placeholder is still there after your edit** (option not set, or
-  another agent such as Codex or Cursor): tell the user which placeholder is in
-  which file and ask them to either set the plugin option or replace it
-  themselves with the key from https://app.revopush.org. If they choose to paste
-  a key into the chat on their own, use it as given.
+If the user doesn't have them at hand, write the placeholders
+`YOUR_IOS_DEPLOYMENT_KEY` and `YOUR_ANDROID_DEPLOYMENT_KEY` instead, tell them
+exactly which file each one is in, and say that a release will not reach a build
+that still has a placeholder. `verification.md` flags any that remain.
 
-Either way, don't obtain keys by reading them from the machine (CLI output,
-config files, keychain, env vars, other projects) — only the user knows which
-app and deployment this build should point at.
-
-`scripts/verify-integration.sh` warns while any placeholder remains; a release
-will not reach a build that still has one.
+Don't obtain keys by reading them from the machine (CLI output, config files,
+keychain, env vars, other projects) — only the user knows which app and
+deployment this build should point at.
 
 ## Where keys go
 
