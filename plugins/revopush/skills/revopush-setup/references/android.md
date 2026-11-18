@@ -153,10 +153,12 @@ so the native module reads them:
 <resources>
     <!-- ...existing strings... -->
     <string moduleConfig="true" name="CodePushServerUrl">https://api.revopush.org</string>
-    <string moduleConfig="true" name="CodePushDeploymentKey">YOUR_DEPLOYMENT_KEY</string>
+    <string moduleConfig="true" name="CodePushDeploymentKey">YOUR_ANDROID_DEPLOYMENT_KEY</string>
 </resources>
 ```
 
 > Casing matters: Android uses `CodePushServerUrl` (lowercase `rl`), unlike the
 > iOS `CodePushServerURL` (uppercase `URL`). This asymmetry is intentional —
-> match each platform exactly. Ask the user for their Android deployment key.
+> match each platform exactly. Write the `YOUR_ANDROID_DEPLOYMENT_KEY`
+> placeholder exactly — the user supplies the real key (see "Where the key
+> values come from" in `cli-and-releases.md`).

@@ -1,0 +1,58 @@
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Least privilege: the job only reads the repository.
+permissions:
+  contents: read
+
+# A newer push to a PR supersedes the run in progress. Runs on main are never
+# cancelled, so every commit there ends with a pass or a fail.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Pinned to a commit SHA so a moved tag can't change what runs.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: JSON files and scripts are valid
+        run: |
+          # check <message> <pathspec> <command...>: run the command on every
+          # tracked file matching the pathspec. Every bad file is reported, not
+          # just the first, and matching nothing is a failure: a moved directory,
+          # a wrong pathspec or a failing `git ls-files` must not pass unchecked.
+          check() {
+            local message=$1 pathspec=$2 count=0 f
+            shift 2
+            while IFS= read -r -d '' f; do
+              count=$((count + 1))
+              if "$@" "$f" > /dev/null < /dev/null; then
+                echo "OK $f"
+              else
+                echo "::error file=$f::$message"
+                failed=1
+              fi
+            done < <(git ls-files -z -- "$pathspec")
+            if [ "$count" -eq 0 ]; then
+              echo "::error::no tracked files match '$pathspec'"
+              failed=1
+            fi
+          }
+
+          failed=0
+          check 'invalid JSON' '*.json' python3 -m json.tool
+          check 'shell syntax error' 'plugins/**/scripts/*.sh' bash -n
+          # Only scripts/: assets/*.template.js is an ES module for the user's
+          # app, which `node --check` rejects outside a "type": "module" package.
+          check 'JavaScript syntax error' 'plugins/**/scripts/*.js' node --check
+          exit "$failed"

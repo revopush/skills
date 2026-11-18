@@ -87,12 +87,14 @@ Add the server URL and the **iOS** deployment key to `ios/<YourApp>/Info.plist`:
 <key>CodePushServerURL</key>
 <string>https://api.revopush.org</string>
 <key>CodePushDeploymentKey</key>
-<string>YOUR_DEPLOYMENT_KEY</string>
+<string>YOUR_IOS_DEPLOYMENT_KEY</string>
 ```
 
 > Casing matters: iOS uses `CodePushServerURL` (uppercase `URL`). Android uses
 > `CodePushServerUrl` (lowercase `rl`) — see `android.md`. Match each exactly.
-> Ask the user for their iOS deployment key; never invent one.
+> Write the `YOUR_IOS_DEPLOYMENT_KEY` placeholder exactly — the user supplies the
+> real key (see "Where the key values come from" in `cli-and-releases.md`).
+> Never invent one or read one off the machine.
 
 ## 5. Reinstall pods
 
