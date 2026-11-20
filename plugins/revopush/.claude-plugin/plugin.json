@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin.json",
   "name": "revopush",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Official Revopush skills for integrating and managing OTA updates in React Native and Expo apps.",
   "author": {
     "name": "Revopush",
