@@ -16,9 +16,9 @@ description: Integrate the Revopush over-the-air (OTA) update SDK
   without React Native.
 license: MIT
 metadata:
-  version: "1.5.1"
+  version: "1.6.0"
   author: revopush
-  last-updated: "2026-11-18"
+  last-updated: "2026-11-21"
 ---
 
 # Revopush OTA Setup
